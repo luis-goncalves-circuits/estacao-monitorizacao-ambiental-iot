@@ -1,0 +1,29 @@
+# Segredos e configuração local — NUNCA comitar
+infra/.env
+infra/certs/
+infra/mosquitto/passwd
+firmware/config.h.local
+
+# Certificados e chaves soltas
+*.pem
+*.key
+*.crt
+!infra/mosquitto/mosquitto.conf
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Saídas geradas localmente por calibracao.py (não confundir com docs/img/)
+*_dispersao.png
+*_validacao.png
+
+# CSVs de dados pessoais de calibração (estação/referência) que o utilizador gere localmente
+estacao.csv
+referencia.csv
+
+# Sistema
+.DS_Store
+Thumbs.db

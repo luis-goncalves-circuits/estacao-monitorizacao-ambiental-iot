@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estação Ambiental — Amora, Setúbal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --fundo:#f6f7f9; --cartao:#fff; --texto:#1c2430; --suave:#5b6675; --linha:#d9dee5; --azul:#1f6feb; --laranja:#d9730d; }
+  @media (prefers-color-scheme: dark) { :root { --fundo:#12161c; --cartao:#1b212a; --texto:#e6eaf0; --suave:#98a3b3; --linha:#2d3643; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background:var(--fundo); color:var(--texto); }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.3rem; margin: 8px 0 2px; } .sub { color:var(--suave); margin:0 0 16px; font-size:.9rem; }
+  .grelha { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
+  .cartao { background:var(--cartao); border:1px solid var(--linha); border-radius:10px; padding:12px; }
+  .cartao small { color:var(--suave); display:block; } .cartao b { font-size:1.5rem; }
+  .barra { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
+  select, input, button, a.btn { font:inherit; padding:6px 10px; border:1px solid var(--linha); border-radius:8px; background:var(--cartao); color:var(--texto); text-decoration:none; cursor:pointer; }
+  .grafico { height: 260px; margin-bottom:14px; } .grafico canvas { width:100% !important; }
+  footer { color:var(--suave); font-size:.8rem; margin-top:20px; }
+  #estado { color:var(--suave); font-size:.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Estação de Monitorização Ambiental — Amora, Setúbal</h1>
+  <p class="sub">Dados abertos (CC BY 4.0). Atualização automática a cada minuto. <span id="estado"></span></p>
+
+  <div class="grelha">
+    <div class="cartao"><small>PM2.5 (µg/m³)</small><b id="v-pm25">—</b></div>
+    <div class="cartao"><small>PM10 (µg/m³)</small><b id="v-pm10">—</b></div>
+    <div class="cartao"><small>Temperatura (°C)</small><b id="v-temperatura">—</b></div>
+    <div class="cartao"><small>Humidade (%)</small><b id="v-humidade">—</b></div>
+    <div class="cartao"><small>Pressão (hPa)</small><b id="v-pressao">—</b></div>
+  </div>
+
+  <div class="barra">
+    <label>Período
+      <select id="periodo">
+        <option value="1">Últimas 24 h</option>
+        <option value="7" selected>Últimos 7 dias</option>
+        <option value="30">Últimos 30 dias</option>
+      </select></label>
+    <a class="btn" id="csv" href="#">Descarregar CSV</a>
+  </div>
+
+  <div class="cartao grafico"><canvas id="g-pm"></canvas></div>
+  <div class="cartao grafico"><canvas id="g-clima"></canvas></div>
+
+  <footer>Sensores de baixo custo (SDS011, BME680). Valores corrigidos por regressão face à estação de referência; consultar a incerteza expandida no relatório técnico.</footer>
+</main>
+
+<script>
+const API = "";  // mesma origem; alterar para "https://o-meu-servidor" se separado
+const $ = id => document.getElementById(id);
+const cor = (v, f) => getComputedStyle(document.documentElement).getPropertyValue(v) || f;
+let gPM, gClima;
+
+function criar(ctx, series, eixos) {
+  return new Chart(ctx, {
+    type: "line",
+    data: { datasets: series.map(s => ({ label: s.rotulo, borderColor: s.cor, backgroundColor: s.cor,
+                                         yAxisID: s.eixo || "y", pointRadius: 0, borderWidth: 1.6, data: [] })) },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, parsing: false,
+      interaction: { mode: "index", intersect: false },
+      scales: { x: { type: "linear", ticks: { callback: v => new Date(v).toLocaleString("pt-PT", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }), maxTicksLimit: 6 } }, ...eixos } }
+  });
+}
+
+function iniciar() {
+  gPM = criar($("g-pm"), [{ rotulo: "PM2.5 (µg/m³)", cor: "#1f6feb" }, { rotulo: "PM10 (µg/m³)", cor: "#d9730d" }],
+    { y: { title: { display: true, text: "µg/m³" }, beginAtZero: true } });
+  gClima = criar($("g-clima"), [{ rotulo: "Temperatura (°C)", cor: "#d1242f" }, { rotulo: "Humidade (%)", cor: "#1a7f64", eixo: "y1" }],
+    { y: { title: { display: true, text: "°C" } }, y1: { position: "right", title: { display: true, text: "%" }, grid: { drawOnChartArea: false } } });
+}
+
+const isoData = d => d.toISOString().slice(0, 16);
+
+async function atualizar() {
+  const dias = +$("periodo").value, fim = new Date(), inicio = new Date(fim - dias * 864e5);
+  const agreg = dias <= 1 ? "10m" : dias <= 7 ? "30m" : "2h";
+  const q = `inicio=${isoData(inicio)}&fim=${isoData(fim)}&agregacao=${agreg}`;
+  $("csv").href = `${API}/api/export.csv?${q}`;
+  try {
+    const dados = await (await fetch(`${API}/api/dados?${q}`)).json();
+    const serie = c => dados.filter(d => d[c] != null).map(d => ({ x: Date.parse(d.tempo_utc), y: d[c] }));
+    [[gPM, ["pm25", "pm10"]], [gClima, ["temperatura", "humidade"]]].forEach(([g, cs]) => {
+      cs.forEach((c, i) => g.data.datasets[i].data = serie(c)); g.update();
+    });
+    const u = dados[dados.length - 1];
+    if (u) {
+      ["pm25", "pm10", "temperatura", "humidade", "pressao"].forEach(c => $("v-" + c).textContent = u[c] ?? "—");
+      $("estado").textContent = "Última medição: " + new Date(u.tempo_utc).toLocaleString("pt-PT");
+    } else { $("estado").textContent = "Sem dados no período."; }
+  } catch (e) { $("estado").textContent = "Erro ao obter dados."; }
+}
+
+iniciar(); atualizar();
+$("periodo").addEventListener("change", atualizar);
+setInterval(atualizar, 60000);
+</script>
+</body>
+</html>

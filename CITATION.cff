@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "Se usar este software ou relatório, por favor cite-o da seguinte forma:"
+title: >-
+  Estação de Monitorização Ambiental de Baixo Custo: Desenvolvimento,
+  Calibração e Validação de um Sistema Descentralizado para Ciência Cidadã
+authors:
+  - family-names: "Gonçalves"
+    given-names: "Luís Filipe Cunha"
+    orcid: "https://orcid.org/0009-0001-0832-7425"
+    affiliation: "Investigador independente"
+version: "2.0"
+date-released: "2026-10-05"
+doi: "10.5281/zenodo.23157287"
+url: "https://doi.org/10.5281/zenodo.23157287"
+repository-code: "https://github.com/luis-goncalves-circuits/estacao-monitorizacao-ambiental-iot"
+license: MIT
+license-url: "https://creativecommons.org/licenses/by/4.0/"
+keywords:
+  - monitorização ambiental
+  - sensores de baixo custo
+  - ESP32
+  - qualidade do ar
+  - calibração
+  - dados abertos
+  - ciência cidadã
+  - InfluxDB
+  - Grafana
+  - MQTT
+abstract: >-
+  Estação de monitorização ambiental de baixo custo, aberta e reprodutível,
+  baseada no ESP32, SDS011 e BME680, com dados publicados por MQTT/TLS,
+  InfluxDB, Grafana, uma API REST e um protocolo de calibração e estimativa
+  de incerteza (GUM) para ciência cidadã.

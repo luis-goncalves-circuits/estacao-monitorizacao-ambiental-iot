@@ -1,0 +1,176 @@
+{
+ "uid": "estacao-amora",
+ "title": "Estação Ambiental — Amora, Setúbal",
+ "timezone": "browser",
+ "refresh": "1m",
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "schemaVersion": 39,
+ "version": 1,
+ "panels": [
+  {
+   "id": 1,
+   "type": "timeseries",
+   "title": "PM2.5 e PM10 (µg/m³)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx-qar"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "conμgm3"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket:\"qualidade_ar\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"qualidade_ar\" and (r._field == \"pm25\" or r._field == \"pm10\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "timeseries",
+   "title": "Temperatura (°C)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx-qar"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "celsius"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket:\"qualidade_ar\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"qualidade_ar\" and (r._field == \"temperatura\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "Humidade relativa (%)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx-qar"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "humidity"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket:\"qualidade_ar\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"qualidade_ar\" and (r._field == \"humidade\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "timeseries",
+   "title": "Pressão atmosférica (hPa)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx-qar"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "pressurehpa"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket:\"qualidade_ar\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"qualidade_ar\" and (r._field == \"pressao\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "gauge",
+   "title": "PM2.5 atual",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx-qar"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 16,
+    "w": 6,
+    "h": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "conμgm3"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket:\"qualidade_ar\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"qualidade_ar\" and (r._field == \"pm25\"))\n  |> last()"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "timeseries",
+   "title": "PM2.5 bruto vs corrigido",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx-qar"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 16,
+    "w": 18,
+    "h": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "conμgm3"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket:\"qualidade_ar\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"qualidade_ar\" and (r._field == \"pm25_raw\" or r._field == \"pm25\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  }
+ ]
+}
